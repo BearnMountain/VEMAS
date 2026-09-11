@@ -1,0 +1,11 @@
+services:
+  vem: 
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/amd64
+    platform: linux/amd64
+
+    stdin_open: true
+    tty: true
