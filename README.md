@@ -10,9 +10,16 @@ Silicon MacOS. This
 - `caffeinate -dim zsh setup.sh`
 - `echo 'alias VEM="$HOME/path/to/repo/VEM/scripts/build/release/VEM"' >> ~/.zshrc`
 - `docker compose up --build`
-    - `docker compose <-f /path/to/compose.yaml> up` other times to start tui
 
 ## Usage
+For startup, use: 
+``` bash
+docker compose -f /path/to/compose.yaml up
+# or from inside the install
+docker compose up
+```
+
+
 
 
 ## Notes

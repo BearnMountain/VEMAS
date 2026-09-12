@@ -1,11 +1,17 @@
 services:
-  vem: 
+  vem:
     build:
       context: .
       dockerfile: Dockerfile
       platforms:
         - linux/amd64
+
     platform: linux/amd64
+
+    command: ["/usr/local/bin/VEM"]
+
+    environment:
+      TERM: xterm-256color
 
     stdin_open: true
     tty: true

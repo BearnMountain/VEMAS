@@ -28,9 +28,18 @@ RUN cargo build --release
 # Runtime(creating Vivado environment)
 FROM --platform=linux/amd64 ubuntu:22.04
 
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TERM=xterm-256color
+
+RUN apt-get update && \
+	apt-get install -y --no-install-recommends \
+		ncurses-base \
+		ncurses-term \
+	&& rm -rf /var/lib/apt/lists/*
+
 WORKDIR /workspace
 
 COPY --from=builder /build/target/release/VEM /usr/local/bin/VEM
 
 # Run TUI on startup
-ENTRYPOINT ["/usr/local/bin/VEM"]
+CMD ["/usr/local/bin/VEM"]
