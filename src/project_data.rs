@@ -1,5 +1,8 @@
+use std::{cell::RefCell, rc::Rc};
 
+pub type Shared<T> = Rc<RefCell<T>>;
 
+#[derive(Debug)]
 pub struct ProjectData {
     pub name: String,
     pub top: String,
@@ -26,6 +29,24 @@ impl ProjectData {
             sv,
             testbench,
         };
+    }
+
+    pub fn shared(
+        name: String,
+        top: String,
+        part: String,
+        vhdl: u32,
+        sv: u32,
+        testbench: u32,
+    ) -> Shared<Self> {
+        return Rc::new(RefCell::new(Self::new(
+            name,
+            top,
+            part,
+            vhdl,
+            sv,
+            testbench,
+        )));
     }
 
     pub fn to_string(&self) -> [String;6] {
