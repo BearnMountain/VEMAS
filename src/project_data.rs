@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 pub type Shared<T> = Rc<RefCell<T>>;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ProjectData {
     pub name: String,
     pub top: String,
@@ -10,6 +10,8 @@ pub struct ProjectData {
     pub vhdl: u32,
     pub sv: u32,
     pub testbench: u32,
+
+    pub location: String,
 }
 
 impl ProjectData {
@@ -28,6 +30,7 @@ impl ProjectData {
             vhdl,
             sv,
             testbench,
+            location: "./".to_string(),
         };
     }
 
@@ -52,9 +55,9 @@ impl ProjectData {
     pub fn to_string(&self) -> [String;6] {
         return [
             self.name.clone(), 
+            self.top.clone(), 
             self.vhdl.to_string(), 
             self.sv.to_string(), 
-            self.top.clone(), 
             self.testbench.to_string(),
             self.part.clone(), 
         ];

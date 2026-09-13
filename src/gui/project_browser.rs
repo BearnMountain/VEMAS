@@ -6,7 +6,7 @@ use ratatui::{
 };
 
 use crate::{
-    gui::widget::confirm_dialog::{ConfirmDialog, ConfirmSelection}, project_data::{ProjectData, Shared}};
+    gui::widget::{confirm_dialog::{ConfirmDialog, ConfirmSelection}, project_creation_wizard::ProjectCreationWizard}, project_data::{ProjectData, Shared}};
 
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -20,7 +20,9 @@ pub enum ProjectBrowserState {
 pub struct ProjectBrowser {
     projects: Vec<Shared<ProjectData>>,
     table_state: TableState,
-    confirm_dialog: ConfirmDialog,
+
+    confirm_dialog: ConfirmDialog, // for delete
+    project_creation_wizard: ProjectCreationWizard, // for add
 
     state: ProjectBrowserState,
 }
@@ -39,6 +41,7 @@ impl ProjectBrowser {
             confirm_dialog: ConfirmDialog::new(
                 "Are you sure you want to delete this project?".to_string()
             ),
+            project_creation_wizard: ProjectCreationWizard::new(),
             state: ProjectBrowserState::IDLE,
         };
     }
@@ -57,7 +60,7 @@ impl ProjectBrowser {
             .split(area);
 
         // top part
-        let header = Row::new(["Name", "VHDL", "SV", "TOP", "TESTBENCH", "PART"])
+        let header = Row::new(["Name", "TOP", "VHDL", "SV", "TESTBENCH", "PART"])
             .style(Style::new().bold())
             .bottom_margin(1);
 
@@ -68,9 +71,9 @@ impl ProjectBrowser {
 
         let widths = [
             Constraint::Min(12),
+            Constraint::Min(11),
             Constraint::Length(6),
             Constraint::Length(5),
-            Constraint::Length(11),
             Constraint::Length(9),
             Constraint::Min(18),
         ];
@@ -86,7 +89,7 @@ impl ProjectBrowser {
             .style(Color::White)
             .row_highlight_style(Style::new().on_black().bold())
             .column_highlight_style(Color::Gray)
-            // .cell_highlight_style(Style::new().reversed().yellow())
+            // .cell_highlight_style(Style::new().reversed().yellow())bro[name_area, location_area, fpga_area]
             .highlight_symbol("> ");
 
         frame.render_stateful_widget(table, chunks[0], &mut self.table_state);
@@ -122,21 +125,32 @@ impl ProjectBrowser {
 
         // state rendering
         if self.state != ProjectBrowserState::IDLE {
-            let popup_block = Block::bordered().title("Popup");
-            let centered_area = area.centered(
-                Constraint::Percentage(60),
-                Constraint::Percentage(40),
-            );
 
-            frame.render_widget(Clear, centered_area);
-            
-            if self.state == ProjectBrowserState::NEW_PROJECT {
-                let paragraph = Paragraph::new("bob")
-                    .block(popup_block.clone());
-                frame.render_widget(paragraph, centered_area);
-            }
-            if self.state == ProjectBrowserState::DELETE_PROJECT {
-                self.confirm_dialog.render(frame, centered_area);
+            match self.state {
+                ProjectBrowserState::NEW_PROJECT => {
+                    let centered_area = area.centered(
+                        Constraint::Percentage(90),
+                        Constraint::Percentage(90),
+                    );
+
+                    frame.render_widget(Clear, centered_area);
+
+                    let popup_block = Block::bordered().title("Popup");
+                    frame.render_widget(popup_block, centered_area);
+
+                    self.project_creation_wizard.render(frame, centered_area);
+				},
+                ProjectBrowserState::DELETE_PROJECT => {
+                    let centered_area = area.centered(
+                        Constraint::Percentage(60),
+                        Constraint::Percentage(40),
+                    );
+
+                    frame.render_widget(Clear, centered_area);
+
+                    self.confirm_dialog.render(frame, centered_area);
+				},
+                _ => {},
             }
         }
     }
@@ -172,10 +186,10 @@ impl ProjectBrowser {
                     },
                 }
             }
-        } else if self.state = ProjectBrowserState::NEW_PROJECT {
-            if  let Some(key_code) = event.as_key_press_event() && 
-                let Some(confirmation) = self.confirm_dialog.handle_event(key_code) {
-
+        } else if self.state == ProjectBrowserState::NEW_PROJECT {
+            if  let Some(key_code) = event.as_key_press_event() {
+                self.project_creation_wizard.handle_event(key_code);
+                
             }
         }
 

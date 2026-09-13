@@ -1,4 +1,4 @@
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, KeyModifiers};
 use ratatui::{DefaultTerminal};
 
 use crate::gui::Gui;
@@ -6,6 +6,7 @@ use crate::gui::Gui;
 mod gui;
 mod project_data;
 mod config;
+mod util;
 
 pub struct App {
     pub running: bool,
@@ -34,11 +35,8 @@ impl App {
             let event = crossterm::event::read().expect("failed to read terminal event");
 
             if let Some(key) = event.as_key_press_event() {
-                match key.code {
-                    KeyCode::Char('q') => {
-                        break
-                    },
-                    _ => {},
+                if key.code == KeyCode::Char('q') && key.modifiers.contains(KeyModifiers::CONTROL) {
+                    break;
                 }
             }
 
