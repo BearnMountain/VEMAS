@@ -83,7 +83,7 @@ impl ProjectBrowser {
             .column_spacing(1)
             .block(
                 Block::default()
-                    .title("Projects")
+                    .title("Browser")
                     .borders(Borders::ALL),
             )
             .style(Color::White)
