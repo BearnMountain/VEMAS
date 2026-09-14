@@ -1,7 +1,7 @@
 use crossterm::event::{KeyCode, KeyModifiers};
 use ratatui::{DefaultTerminal};
 
-use crate::gui::Gui;
+use crate::{config::Config, gui::Gui};
 
 mod gui;
 mod project_data;
@@ -46,6 +46,12 @@ impl App {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // setting up app defaults
+    if let Err(e) = Config::init("config.toml") {
+        eprintln!("Failed to load config: {e}");
+        std::process::exit(1);
+    }
+
     ratatui::run(|terminal|
         App::new().run(terminal)
     );

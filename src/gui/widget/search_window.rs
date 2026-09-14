@@ -105,7 +105,7 @@ impl SearchWidget {
         // frame.render_widget(help, layout[1]);    
     }
 
-    pub fn handle_events(&mut self, event: &KeyCode) {
+    pub fn handle_events(&mut self, event: KeyCode) {
 
     }
 

@@ -1,29 +1,29 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{Frame, layout::{Alignment, Constraint, Direction, Layout, Margin, Rect}, widgets::{Block, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState}};
 
-use crate::{gui::widget::{project_creation_wizard::ActiveFormQuestion::PROJECT_NAME, search_window::SearchWidget, user_input::UserInput}, project_data::ProjectData};
+use crate::{gui::widget::{project_creation_wizard::FormFocus::PROJECT_NAME, search_window::SearchWidget, user_input::UserInput}, project_data::ProjectData};
 
-#[derive(Debug, Copy, Clone)]
-pub enum ActiveFormQuestion {
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum FormFocus {
     PROJECT_NAME,
     LOCATION,
     FPGA_PART,
 }
 
-impl ActiveFormQuestion {
+impl FormFocus {
     fn next(self) -> Self {
         match self {
-            ActiveFormQuestion::PROJECT_NAME => ActiveFormQuestion::LOCATION,
-            ActiveFormQuestion::LOCATION => ActiveFormQuestion::FPGA_PART,
-            ActiveFormQuestion::FPGA_PART => ActiveFormQuestion::PROJECT_NAME,
+            FormFocus::PROJECT_NAME => FormFocus::LOCATION,
+            FormFocus::LOCATION => FormFocus::FPGA_PART,
+            FormFocus::FPGA_PART => FormFocus::PROJECT_NAME,
         }
     }
 
     fn prev(self) -> Self {
         match self {
-            ActiveFormQuestion::PROJECT_NAME => ActiveFormQuestion::FPGA_PART,
-            ActiveFormQuestion::LOCATION => ActiveFormQuestion::PROJECT_NAME,
-            ActiveFormQuestion::FPGA_PART => ActiveFormQuestion::LOCATION,
+            FormFocus::PROJECT_NAME => FormFocus::FPGA_PART,
+            FormFocus::LOCATION => FormFocus::PROJECT_NAME,
+            FormFocus::FPGA_PART => FormFocus::LOCATION,
         }
     }
 }
@@ -41,7 +41,7 @@ pub struct ProjectCreationWizard {
     vertical_scroll_state: ScrollbarState,
     vertical_scroll: usize,
 
-    active: ActiveFormQuestion,
+    focus: FormFocus,
 
     project_name_info: UserInput,
     location_info: UserInput,
@@ -58,7 +58,7 @@ impl ProjectCreationWizard {
             project_data: ProjectData::default(),
             vertical_scroll_state: ScrollbarState::new(100),
             vertical_scroll: 100,
-            active: ActiveFormQuestion::PROJECT_NAME,
+            focus: FormFocus::PROJECT_NAME,
             project_name_info,
             location_info: UserInput::new(),
             fpga_part_info: SearchWidget::new(vec![
@@ -72,6 +72,12 @@ impl ProjectCreationWizard {
     }
 
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
+        // renders dialog instead of wizard window
+        if self.fpga_dialog_active {
+            self.project_name_info.render(frame, area);
+            return;
+        }
+
         let popup_block = Block::bordered()
             .title("Create Project")
             .title_alignment(Alignment::Center);
@@ -147,34 +153,42 @@ impl ProjectCreationWizard {
     }
 
     pub fn handle_event(&mut self, key_code: KeyEvent) {
+        if self.fpga_dialog_active {
+
+
+            return;
+        }
+        
         match key_code.code {
             KeyCode::Tab => {
-                match self.active {
-                    ActiveFormQuestion::PROJECT_NAME => self.project_name_info.toggle_active(),
-                    ActiveFormQuestion::LOCATION => self.location_info.toggle_active(),
-                    ActiveFormQuestion::FPGA_PART => {},
+                match self.focus {
+                    FormFocus::PROJECT_NAME => self.project_name_info.toggle_active(),
+                    FormFocus::LOCATION => self.location_info.toggle_active(),
+                    FormFocus::FPGA_PART => {},
                 }
-                self.active = self.active.next();
-                match self.active {
-                    ActiveFormQuestion::PROJECT_NAME => self.project_name_info.toggle_active(),
-                    ActiveFormQuestion::LOCATION => self.location_info.toggle_active(),
-                    ActiveFormQuestion::FPGA_PART => {},
+                self.focus = self.focus.next();
+                match self.focus {
+                    FormFocus::PROJECT_NAME => self.project_name_info.toggle_active(),
+                    FormFocus::LOCATION => self.location_info.toggle_active(),
+                    FormFocus::FPGA_PART => {},
                 }
             },
             KeyCode::Down => self.scroll_down(),
             KeyCode::Up => self.scroll_up(),
             KeyCode::Enter => {
-                if self.active == ActiveFormQuestion::FPGA_PART {
-                    self.fpga_part_info = true;
+                if self.focus == FormFocus::FPGA_PART {
+                    self.fpga_dialog_active = true;
                 }
-            }
+            },
             _ => {},
         }
 
-        match self.active {
-            ActiveFormQuestion::PROJECT_NAME => self.project_name_info.handle_event(key_code.code),
-            ActiveFormQuestion::LOCATION => self.location_info.handle_event(key_code.code),
-            ActiveFormQuestion::FPGA_PART => self.fpga_part_info.handle_events(key_code.code),
+        match self.focus {
+            FormFocus::PROJECT_NAME | FormFocus::LOCATION => {
+                self.project_name_info.handle_event(key_code.code);
+                self.location_info.handle_event(key_code.code);
+            },
+            FormFocus::FPGA_PART => self.fpga_part_info.handle_events(key_code.code),
         }
     }
 
